@@ -1,0 +1,19 @@
+FROM debian:buster-slim
+MAINTAINER Italo Valcy <italovalcy@gmail.com>
+
+ENV KYTOS_SERVER kytos-server
+
+RUN apt-get update && apt-get install -y --no-install-recommends --no-install-suggests apache2 ssl-cert
+RUN a2ensite default-ssl
+RUN a2enmod proxy_http
+RUN a2enmod ssl
+
+COPY apache2-kytos.conf /etc/apache2/conf-available/kytos.conf
+RUN a2enconf kytos
+RUN htpasswd -cb /etc/apache2/.htpasswd kytos kytos123
+
+EXPOSE 443
+
+ENTRYPOINT sed -i "s/XXXKYTOSSERVERXXX/$KYTOS_SERVER/g" /etc/apache2/conf-available/kytos.conf \
+	&& service apache2 start \
+	&& tail -f /dev/null
